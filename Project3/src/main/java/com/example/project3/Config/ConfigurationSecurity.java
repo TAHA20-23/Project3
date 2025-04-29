@@ -38,12 +38,14 @@ public class ConfigurationSecurity {
                 .and()
                 .authenticationProvider(daoAuthenticationProvider())
                 .authorizeHttpRequests()
-                .requestMatchers("/api/v1/auth/register").permitAll()
-                .requestMatchers("/api/v1/customer/get-my-customers","/api/v1/customer/add-customer","/api/v1/customer/update-customer/{customerId}",
-                                 "/api/v1/customer/delete-customer/{customerId}","/api/v1/account/my-accounts","/api/v1/account/details/{accountId}",
+                .requestMatchers("/api/v1/customer/register-customer").permitAll()
+                .requestMatchers("/api/v1/customer/add-customer","/api/v1/customer/update-customer/{customerId}"
+                                 ,"/api/v1/account/my-accounts","/api/v1/account/details/{accountId}",
                                  "/api/v1/account/deposit/{accountId}","/api/v1/account/withdraw/{accountId}","/api/v1/account/transfer").hasAuthority("CUSTOMER")
-                .requestMatchers("/api/v1/account/create").hasAnyAuthority("CUSTOMER","EMPLOYEE")
-                .requestMatchers("/api/v1/account/block/{accountId}","/api/v1/employee/**").hasAuthority("EMPLOYEE")
+                .requestMatchers("/api/v1/account/create","/api/v1/customer/delete-customer/{customerId}").hasAnyAuthority("CUSTOMER","EMPLOYEE","ADMIN")
+                .requestMatchers("/api/v1/employee/update/{employeeId}").hasAuthority("EMPLOYEE")
+                .requestMatchers("/api/v1/account/block/{accountId}").hasAnyAuthority("EMPLOYEE","ADMIN")
+                .requestMatchers("/api/v1/employee/add-employee","/api/v1/employee/get-all-employees","/api/v1/employee/delete/{employeeId}").hasAuthority("ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .logout().logoutUrl("/api/v1/auth/logout")

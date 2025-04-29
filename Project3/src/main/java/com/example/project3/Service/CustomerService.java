@@ -7,6 +7,7 @@ import com.example.project3.Model.User;
 import com.example.project3.Repository.AuthRepository;
 import com.example.project3.Repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,72 +19,48 @@ public class CustomerService {
     private final AuthRepository authRepository;
     private final CustomerRepository customerRepository;
 
-    public void addCustomer(Integer userId, CustomerDTO customerDTO) {
-        User user = authRepository.findUsersById(userId);
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
+    public void registerCustomer(CustomerDTO customerDTO) {
 
-        if (!user.getRole().equals("CUSTOMER")) {
-            throw new ApiException("User is not a CUSTOMER");
-        }
-
-        Customer customer = new Customer();
-        customer.setPhoneNumber(customerDTO.getPhoneNumber());
-        customer.setUser(user);
-
+        customerDTO.setRole("CUSTOMER");
+        String hashPassword= new BCryptPasswordEncoder().encode(customerDTO.getPassword());
+        User user= new User(null,customerDTO.getUsername(),hashPassword,customerDTO.getName(),customerDTO.getEmail(),customerDTO.getRole(),null,null);
+        Customer customer= new Customer(null,customerDTO.getPhoneNumber(),user,null);
+        authRepository.save(user);
         customerRepository.save(customer);
+
     }
 
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
 
-    public List<Customer> getMyCustomers(Integer userId) {
-        User user = authRepository.findUfserById(userId);
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
-
-        return customerRepository.findAllByUser(user);
-    }
-
-    public void updateCustomer(Integer userId, Integer customerId, CustomerDTO customerDTO) {
-        User user = authRepository.findUsersById(userId);
+    public void updateCustomer(User user, Integer customerId, CustomerDTO customerDTO) {
         Customer customer = customerRepository.findCustomerById(customerId);
-
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
 
         if (customer == null) {
             throw new ApiException("Customer not found");
         }
 
-        if (!customer.getUser().getId().equals(userId)) {
-            throw new ApiException("Customer does not belong to the user");
+        if (!customer.getUser().getId().equals(user.getId())) {
+            throw new ApiException("You are not allowed to update another user's customer");
         }
 
         customer.setPhoneNumber(customerDTO.getPhoneNumber());
         customerRepository.save(customer);
     }
 
-    public void deleteCustomer(Integer userId, Integer customerId) {
-        User user = authRepository.findUsersById(userId);
+    public void deleteCustomer(User user, Integer customerId) {
         Customer customer = customerRepository.findCustomerById(customerId);
-
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
 
         if (customer == null) {
             throw new ApiException("Customer not found");
         }
 
-        if (!customer.getUser().getId().equals(userId)) {
-            throw new ApiException("Customer does not belong to the user");
+        if (!customer.getUser().getId().equals(user.getId())) {
+            throw new ApiException("You are not allowed to delete another user's customer");
         }
 
         customerRepository.delete(customer);
     }
+
 }

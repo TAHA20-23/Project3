@@ -12,8 +12,8 @@ public class AuthService {
 
     private final AuthRepository authRepository;
 
-    public void  register(User user){
-        user.setRole("USER");
+    public void  registerCustomer(User user){
+        user.setRole("CUSTOMER");
 
         String hashPassword= new BCryptPasswordEncoder().encode(user.getPassword());
         user.setPassword(hashPassword);

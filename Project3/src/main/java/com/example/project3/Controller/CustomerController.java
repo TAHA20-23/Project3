@@ -3,6 +3,7 @@ package com.example.project3.Controller;
 import com.example.project3.DTO.CustomerDTO;
 import com.example.project3.Model.User;
 import com.example.project3.Service.CustomerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,30 +21,25 @@ public class CustomerController {
         return ResponseEntity.status(200).body(customerService.getAllCustomers());
     }
 
-    @GetMapping("/get-my-customers")
-    public ResponseEntity getMyCustomers(@AuthenticationPrincipal User user) {
-        return ResponseEntity.status(200).body(customerService.getMyCustomers(user.getId()));
+
+
+    @PostMapping("/register-customer")
+    public ResponseEntity registerCustomer(@RequestBody @Valid CustomerDTO customerDTO){
+        customerService.registerCustomer(customerDTO);
+        return ResponseEntity.status(200).body("Customer register");
     }
 
-    @PostMapping("/add-customer")
-    public ResponseEntity addCustomer(@AuthenticationPrincipal User user,
-                                      @RequestBody CustomerDTO customerDTO) {
-        customerService.addCustomer(user.getId(), customerDTO);
-        return ResponseEntity.status(200).body("Customer added successfully");
-    }
 
-    @PutMapping("/update-customer/{customerId}")
-    public ResponseEntity updateCustomer(@AuthenticationPrincipal User user,
-                                         @PathVariable Integer customerId,
-                                         @RequestBody CustomerDTO customerDTO) {
-        customerService.updateCustomer(user.getId(), customerId, customerDTO);
+    @PutMapping("/update/{customerId}")
+    public ResponseEntity updateCustomer(@AuthenticationPrincipal User user,@PathVariable Integer customerId,@RequestBody CustomerDTO customerDTO) {
+        customerService.updateCustomer(user, customerId, customerDTO);
         return ResponseEntity.status(200).body("Customer updated successfully");
     }
 
-    @DeleteMapping("/delete-customer/{customerId}")
-    public ResponseEntity deleteCustomer(@AuthenticationPrincipal User user,
-                                         @PathVariable Integer customerId) {
-        customerService.deleteCustomer(user.getId(), customerId);
+    @DeleteMapping("/delete/{customerId}")
+    public ResponseEntity deleteCustomer(@AuthenticationPrincipal User user,@PathVariable Integer customerId) {
+        customerService.deleteCustomer(user, customerId);
         return ResponseEntity.status(200).body("Customer deleted successfully");
     }
+
 }

@@ -7,6 +7,7 @@ import com.example.project3.Model.User;
 import com.example.project3.Repository.AuthRepository;
 import com.example.project3.Repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,46 +23,33 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
-    public List<Employee> getMyEmployees(Integer userId) {
-        User user = authRepository.findUsersById(userId);
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
-        return employeeRepository.findAllByUser(user);
-    }
 
-    public void addEmployee(Integer userId, EmployeeDTO employeeDTO) {
-        User user = authRepository.findUfserById(userId);
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
 
-        if (!user.getRole().equals("EMPLOYEE")) {
-            throw new ApiException("User is not an EMPLOYEE");
-        }
+    public void registerEmployee(EmployeeDTO employeeDTO) {
 
-        Employee employee = new Employee();
-        employee.setPosition(employeeDTO.getPosition());
-        employee.setSalary(employeeDTO.getSalary());
-        employee.setUser(user);
+        employeeDTO.setRole("EMPLOYEE");
+        String hashPassword= new BCryptPasswordEncoder().encode(employeeDTO.getPassword());
+        User user= new User(null,employeeDTO.getUsername(),hashPassword,employeeDTO.getName(),employeeDTO.getEmail(),
+                employeeDTO.getRole(),null,null);
+        Employee employee=new Employee(null,employeeDTO.getPosition(),employeeDTO.getSalary(),user);
 
+        authRepository.save(user);
         employeeRepository.save(employee);
+
+
+
+
     }
 
-    public void updateEmployee(Integer userId, Integer employeeId, EmployeeDTO employeeDTO) {
-        User user = authRepository.findUsersById(userId);
+    public void updateEmployee(User user, Integer employeeId, EmployeeDTO employeeDTO) {
         Employee employee = employeeRepository.findEmployeesById(employeeId);
-
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
 
         if (employee == null) {
             throw new ApiException("Employee not found");
         }
 
-        if (!employee.getUser().getId().equals(userId)) {
-            throw new ApiException("This employee does not belong to the user");
+        if (!employee.getUser().getId().equals(user.getId())) {
+            throw new ApiException("You are not allowed to update another employee's data");
         }
 
         employee.setPosition(employeeDTO.getPosition());
@@ -70,20 +58,17 @@ public class EmployeeService {
         employeeRepository.save(employee);
     }
 
-    public void deleteEmployee(Integer userId, Integer employeeId) {
-        User user = authRepository.findUsersById(userId);
+
+    public void deleteEmployee(User user, Integer employeeId) {
         Employee employee = employeeRepository.findEmployeesById(employeeId);
 
-        if (user == null) {
-            throw new ApiException("User not found");
-        }
 
         if (employee == null) {
             throw new ApiException("Employee not found");
         }
 
-        if (!employee.getUser().getId().equals(userId)) {
-            throw new ApiException("This employee does not belong to the user");
+        if (!employee.getUser().getId().equals(user.getId())) {
+            throw new ApiException("You are not allowed to delete another employee's data");
         }
 
         employeeRepository.delete(employee);
